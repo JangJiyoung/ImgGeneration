@@ -140,7 +140,7 @@
         .result-box {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            height: 300px; /* 결과창 높이 약간 상향 */
+            height: 320px;
             font-family: 'Courier New', Courier, monospace;
             white-space: pre-wrap;
         }
@@ -239,9 +239,11 @@
         const bgEn = translateKoreanToEnglish(bgKo);
 
         // =====================================================
-        // [STAGE 1] 라이트 모드 프롬프트 (수정 사항 최종 반영)
+        // [STAGE 1] 라이트 모드 프롬프트 수정 (즉시 생성 및 툴 빌드 강제)
         // =====================================================
-        const lightPrompt = `Please generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio, based on the following data. This image must incorporate all specific modification requests.
+        const lightPrompt = `[CRITICAL SYSTEM DIRECTION: DO NOT reply with text descriptions or link URLs. Skip introduction. IMMEDIATELY call your internal image generation tool to render the artwork now.]
+
+Generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio. 
 
 [Character & Style Consistency]
 - Refer to the style, character design, and line work of the existing images: "bg_MathMagic_EL.jpg" and "bg_MathMagic_ED.jpg".
@@ -252,7 +254,7 @@
 - Dialogue: 
 ${dialogue}
 
-- Detailed Scene Setup & Modifications (CRITICAL): 
+- Detailed Scene Setup & Modifications: 
 ${bgEn}
 
 [Image Specifications: Light Mode]
@@ -260,30 +262,32 @@ ${bgEn}
 - Soft beige, cream, and warm tones for the overall color palette.
 - Do NOT split the screen. Generate exactly ONE clean 1:1 square image.
 
-Create this illustration right now.`; // ★ 변경사항: 즉시 생성 명령 추가
+[FINAL COMMAND: Trigger the image generation tool immediately. Do not write text before the tool execution.]`;
 
         // =====================================================
-        // [STAGE 2] 다크 모드 프롬프트 (확정된 라이트 모드 이미지 상태 기반)
+        // [STAGE 2] 다크 모드 프롬프트 수정 (즉시 생성 및 상속 강화)
         // =====================================================
-        
-        // 사용자가 라이트모드 최종 상태를 설명하지 않았을 경우를 대비한 기본값
         const finalLightStateDescription = lightRef ? 
             `Based on the FINALLY ESTABLISHED [LIGHT MODE] image which is described as: "${lightRef}"` : 
             `Based on the FINALLY ESTABLISHED [LIGHT MODE] image that you just generated in this session`;
 
-        const darkPrompt = `${finalLightStateDescription}, now generate Jun's bedroom in [DARK MODE] as ONE single 1:1 square illustration.
+        const darkPrompt = `[CRITICAL SYSTEM DIRECTION: DO NOT reply with text descriptions or link URLs. Skip introduction. IMMEDIATELY call your internal image generation tool to render the artwork now.]
+
+${finalLightStateDescription}, now generate Jun's bedroom in [DARK MODE] as ONE single 1:1 square illustration.
 
 [Strict Consistency Requirements - CRITICAL]
 - ABSOLUTELY EVERYTHING from that final light mode image must be preserved EXACTLY THE SAME.
 - This includes: the character Jun's exact pose, his facial expression, the exact placement of ALL objects (e.g., the desk, the bed, the specific alarm clock showing 7:30, etc.), and the overall room layout.
 - Retain all the modifications made in that final light mode version (e.g., specific object removals like the laundry basket, or additions).
-- Do NOT change the composition. Simply shift the environment from day to night without altering any object locations or details.
+- Do NOT change the composition or character appearance. Simply shift the environment from day to night without altering any object locations or details.
 
 [Image Specifications: Dark Mode (Based on bg_MathMagic_ED.jpg)]
 - Dimmed, cool, and nocturnal atmosphere.
 - Change the overall color palette to dark teal, cyan, and deep blue-green tones.
 - Replace the warm daytime light with a cool neon/artificial overhead light glow from the ceiling.
-- Do NOT split the screen or show side-by-side comparison. Generate exactly ONE clean 1:1 dark mode image.`; // ★ 변경사항: 상속 설명 강화
+- Do NOT split the screen or show side-by-side comparison. Generate exactly ONE clean 1:1 dark mode image.
+
+[FINAL COMMAND: Trigger the image generation tool immediately. Do not write text before the tool execution.]`;
 
         // 결과 삽입 및 화면 표시
         document.getElementById('lightOutput').value = lightPrompt;
