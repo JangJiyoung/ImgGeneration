@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OwnTalk Iterative Light-to-Dark Prompt Generator</title>
+    <title>OwnTalk Iterative Light-to-Dark Prompt Generator (Enhanced)</title>
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -140,7 +140,7 @@
         .result-box {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            height: 250px;
+            height: 300px; /* 결과창 높이 약간 상향 */
             font-family: 'Courier New', Courier, monospace;
             white-space: pre-wrap;
         }
@@ -149,7 +149,7 @@
 <body>
 
 <div class="container">
-    <h1>OwnTalk Step-by-Step Prompt Generator</h1>
+    <h1>OwnTalk Precision Prompt Generator</h1>
 
     <!-- 1. 영문 다이알로그 입력창 -->
     <div class="input-group">
@@ -163,14 +163,14 @@
         <textarea id="bgInput" placeholder="예: John은 잠옷 차림에 머리를 잡고 당황해 하고 있다. 침대옆 자명종 시계는 7시30분. 책상은 두고 옷바구니와 말풍선은 제거해줘."></textarea>
     </div>
 
-    <!-- 3. ★ 신규: 확정된 라이트 모드 이미지 참조창 -->
+    <!-- 3. 확정된 라이트 모드 이미지 파일명/설명 입력창 -->
     <div class="input-group">
-        <label for="lightRefInput" style="color: #d35400;">3. [선택] 제미나이가 최종 생성한 라이트 모드 이미지 파일명 (다크 모드 변환용)</label>
-        <input type="text" id="lightRefInput" placeholder="예: watermarked_img_17957715240105170400.png (라이트 모드가 완전히 확정되면 여기에 넣으세요)">
+        <label for="lightRefInput" style="color: #d35400;">3. [선택] 최종 수정된 라이트 모드 이미지에 대한 명확한 설명 (다크 모드 변환용)</label>
+        <textarea id="lightRefInput" placeholder="예: 최종 확정된 라이트 모드 이미지는 '잠옷 입은 John이 당황하며 7시30분 시계를 보는 장면'이며, 책상은 있고 옷바구니는 제거된 상태임."></textarea>
     </div>
 
     <div class="btn-container">
-        <button class="main-btn" onclick="generateSplitPrompts()">시나리오별 코멘트 생성하기</button>
+        <button class="main-btn" onclick="generateSplitPrompts()">최적화된 코멘트 생성하기</button>
     </div>
 
     <!-- 완성된 결과 출력 영역 -->
@@ -179,7 +179,7 @@
         <!-- [1] 라이트 모드 전용 생성 창 -->
         <div class="output-group">
             <div class="output-header">
-                <label style="color: #d35400;">☀️ **STAGE 1: 라이트 모드 전용 코멘트** (원하는 결과가 나올 때까지 수정 오더용으로 사용)</label>
+                <label style="color: #d35400;">☀️ **STAGE 1: 라이트 모드 (최종 수정 오더 반영)**</label>
                 <button class="copy-btn light-copy" onclick="copyText('lightOutput')">라이트 모드 코멘트 복사</button>
             </div>
             <textarea id="lightOutput" class="result-box" readonly></textarea>
@@ -188,7 +188,7 @@
         <!-- [2] 다크 모드 전용 생성 창 -->
         <div class="output-group">
             <div class="output-header">
-                <label style="color: #2c3e50;">🌙 **STAGE 2: 확정된 라이트 모드를 기반으로 한 다크 모드 전환 코멘트**</label>
+                <label style="color: #2c3e50;">🌙 **STAGE 2: 확정된 라이트 모드 기준 다크 모드 전환**</label>
                 <button class="copy-btn dark-copy" onclick="copyText('darkOutput')">다크 모드 코멘트 복사</button>
             </div>
             <textarea id="darkOutput" class="result-box" readonly></textarea>
@@ -238,8 +238,10 @@
 
         const bgEn = translateKoreanToEnglish(bgKo);
 
-        // [STAGE 1] 라이트 모드 프롬프트 구조 (독립 빌드)
-        const lightPrompt = `Please generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio, based on the provided data.
+        // =====================================================
+        // [STAGE 1] 라이트 모드 프롬프트 (수정 사항 최종 반영)
+        // =====================================================
+        const lightPrompt = `Please generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio, based on the following data. This image must incorporate all specific modification requests.
 
 [Character & Style Consistency]
 - Refer to the style, character design, and line work of the existing images: "bg_MathMagic_EL.jpg" and "bg_MathMagic_ED.jpg".
@@ -250,33 +252,38 @@
 - Dialogue: 
 ${dialogue}
 
-- Detailed Scene Setup & Modifications: 
+- Detailed Scene Setup & Modifications (CRITICAL): 
 ${bgEn}
 
 [Image Specifications: Light Mode]
 - Bright, warm, and natural morning/daytime room lighting.
 - Soft beige, cream, and warm tones for the overall color palette.
-- Do NOT split the screen. Generate exactly ONE clean 1:1 square image.`;
+- Do NOT split the screen. Generate exactly ONE clean 1:1 square image.
 
-        // [STAGE 2] 다크 모드 프롬프트 구조 (확정된 라이트 모드 이미지를 명시적으로 주입)
-        let imageInheritanceText = '- Refer to the [LIGHT MODE] image you just generated in this session.';
-        if (lightRef) {
-            imageInheritanceText = `- Refer to the specific [LIGHT MODE] image file named "${lightRef}" verbatim.`;
-        }
+Create this illustration right now.`; // ★ 변경사항: 즉시 생성 명령 추가
 
-        const darkPrompt = `Based on the final established [LIGHT MODE] image, now generate the corresponding [DARK MODE] version as ONE single 1:1 square illustration.
+        // =====================================================
+        // [STAGE 2] 다크 모드 프롬프트 (확정된 라이트 모드 이미지 상태 기반)
+        // =====================================================
+        
+        // 사용자가 라이트모드 최종 상태를 설명하지 않았을 경우를 대비한 기본값
+        const finalLightStateDescription = lightRef ? 
+            `Based on the FINALLY ESTABLISHED [LIGHT MODE] image which is described as: "${lightRef}"` : 
+            `Based on the FINALLY ESTABLISHED [LIGHT MODE] image that you just generated in this session`;
 
-[Strict Consistency from the Target Image]
-${imageInheritanceText}
-- Keep everything EXACTLY THE SAME as that specific light mode image: the character's pose, facial expression, the placement of all objects (desk, bed, clock, etc.), and the overall room layout. 
-- Retain all the modifications made in that final light mode version (e.g., specific object removals or additions).
-- Do NOT change the composition. Simply shift the environment from day to night.
+        const darkPrompt = `${finalLightStateDescription}, now generate Jun's bedroom in [DARK MODE] as ONE single 1:1 square illustration.
+
+[Strict Consistency Requirements - CRITICAL]
+- ABSOLUTELY EVERYTHING from that final light mode image must be preserved EXACTLY THE SAME.
+- This includes: the character Jun's exact pose, his facial expression, the exact placement of ALL objects (e.g., the desk, the bed, the specific alarm clock showing 7:30, etc.), and the overall room layout.
+- Retain all the modifications made in that final light mode version (e.g., specific object removals like the laundry basket, or additions).
+- Do NOT change the composition. Simply shift the environment from day to night without altering any object locations or details.
 
 [Image Specifications: Dark Mode (Based on bg_MathMagic_ED.jpg)]
 - Dimmed, cool, and nocturnal atmosphere.
 - Change the overall color palette to dark teal, cyan, and deep blue-green tones.
 - Replace the warm daytime light with a cool neon/artificial overhead light glow from the ceiling.
-- Do NOT split the screen or show side-by-side comparison. Generate exactly ONE clean 1:1 dark mode image.`;
+- Do NOT split the screen or show side-by-side comparison. Generate exactly ONE clean 1:1 dark mode image.`; // ★ 변경사항: 상속 설명 강화
 
         // 결과 삽입 및 화면 표시
         document.getElementById('lightOutput').value = lightPrompt;
