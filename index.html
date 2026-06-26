@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OwnTalk Iterative Light-to-Dark Prompt Generator (Enhanced)</title>
+    <title>OwnTalk Iterative Light-to-Dark Prompt Generator</title>
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -70,6 +70,37 @@
         textarea:focus, input[type="text"]:focus {
             outline: none;
             border-color: var(--primary-color);
+        }
+
+        .character-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .char-chip {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: #ffffff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.2s ease;
+        }
+
+        .char-chip:hover {
+            background-color: #f0f4f8;
+        }
+
+        .char-chip.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 6px rgba(74, 144, 226, 0.3);
         }
 
         .btn-container {
@@ -140,7 +171,7 @@
         .result-box {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            height: 320px;
+            height: 380px;
             font-family: 'Courier New', Courier, monospace;
             white-space: pre-wrap;
         }
@@ -149,46 +180,52 @@
 <body>
 
 <div class="container">
-    <h1>OwnTalk Precision Prompt Generator</h1>
+    <h1>OwnTalk Step-by-Step Prompt Generator</h1>
 
-    <!-- 1. 영문 다이알로그 입력창 -->
+    <div class="input-group">
+        <label>0. 장면에 등장할 캐릭터 선택 (중복 가능)</label>
+        <div class="character-selector">
+            <button class="char-chip" data-char="John_E" onclick="toggleChar(this)">👦 John (초등 11~12세)</button>
+            <button class="char-chip" data-char="John_T" onclick="toggleChar(this)">🧑 John (청소년 15~16세)</button>
+            <button class="char-chip" data-char="John_G" onclick="toggleChar(this)">👨 John (대학일반 27~28세)</button>
+            <button class="char-chip" data-char="Mary_E" onclick="toggleChar(this)">👧 Mary (초등 11~12세)</button>
+            <button class="char-chip" data-char="Mary_T" onclick="toggleChar(this)">👩 Mary (청소년 15~16세)</button>
+            <button class="char-chip" data-char="Mary_G" onclick="toggleChar(this)">👩‍💼 Mary (대학일반 27~28세)</button>
+        </div>
+    </div>
+
     <div class="input-group">
         <label for="dialogueInput">1. 영문 다이알로그 (English Dialogue)</label>
         <textarea id="dialogueInput" placeholder="여기에 영어 대화문을 붙여넣으세요..."></textarea>
     </div>
 
-    <!-- 2. 한글 배경 및 디자인 설명 입력창 -->
     <div class="input-group">
         <label for="bgInput">2. 배경 및 세부 디자인 설명 (원하는 연출/수정사항 자유롭게 기술)</label>
-        <textarea id="bgInput" placeholder="예: John이 일반 평상복 차림으로 의자에 앉아 입을 벌리고 진찰을 받고 있고, 의사 선생님은 등받이가 있는 의자에 앉아 구강 검사를 하고 있다."></textarea>
+        <textarea id="bgInput" placeholder="예: 잠옷 차림에 머리를 잡고 당황해 하고 있다. 침대옆 자명종 시계는 7시30분. 책상은 두고 옷바구니는 제거해줘."></textarea>
     </div>
 
-    <!-- 3. 확정된 라이트 모드 이미지 파일명/설명 입력창 -->
     <div class="input-group">
-        <label for="lightRefInput" style="color: #d35400;">3. [선택] 확정된 라이트 모드 씬의 핵심 요약 (다크 모드 변환용)</label>
-        <textarea id="lightRefInput" placeholder="예: 병원 진료실에서 진찰을 받고 있는 John과 의사 선생님 씬 (이 씬의 구도와 소품을 그대로 다크 모드로 가져갑니다)"></textarea>
+        <label for="lightRefInput" style="color: #d35400;">3. [선택] 제미나이가 최종 생성한 라이트 모드 이미지 파일명 (다크 모드 변환용)</label>
+        <input type="text" id="lightRefInput" placeholder="예: image_12345.png (입력하지 않으면 직전에 생성한 이미지를 자동 참조합니다)">
     </div>
 
     <div class="btn-container">
-        <button class="main-btn" onclick="generateSplitPrompts()">최적화된 코멘트 생성하기</button>
+        <button class="main-btn" onclick="generateSplitPrompts()">시나리오별 코멘트 생성하기</button>
     </div>
 
-    <!-- 완성된 결과 출력 영역 -->
     <div id="outputSection" class="output-section">
         
-        <!-- [1] 라이트 모드 전용 생성 창 -->
         <div class="output-group">
             <div class="output-header">
-                <label style="color: #d35400;">☀️ **STAGE 1: 라이트 모드 (최종 수정 오더 반영)**</label>
+                <label style="color: #d35400;">☀️ **STAGE 1: 라이트 모드 전용 코멘트**</label>
                 <button class="copy-btn light-copy" onclick="copyText('lightOutput')">라이트 모드 코멘트 복사</button>
             </div>
             <textarea id="lightOutput" class="result-box" readonly></textarea>
         </div>
 
-        <!-- [2] 다크 모드 전용 생성 창 -->
         <div class="output-group">
             <div class="output-header">
-                <label style="color: #2c3e50;">🌙 **STAGE 2: 확정된 라이트 모드 기준 다크 모드 전환**</label>
+                <label style="color: #2c3e50;">🌙 **STAGE 2: 다크 모드 전환 코멘트**</label>
                 <button class="copy-btn dark-copy" onclick="copyText('darkOutput')">다크 모드 코멘트 복사</button>
             </div>
             <textarea id="darkOutput" class="result-box" readonly></textarea>
@@ -198,6 +235,37 @@
 </div>
 
 <script>
+    function toggleChar(btn) {
+        btn.classList.toggle('selected');
+    }
+
+    const characterDatabase = {
+        "John_E": {
+            url: "https://raw.githubusercontent.com/JangJiyoung/ImgGeneration/main/John_E.png",
+            profile: "A 11-12 years old elementary school boy, short messy brown hair, big warm brown eyes, adorable freckles on cheeks, bright and friendly look."
+        },
+        "John_T": {
+            url: "https://raw.githubusercontent.com/JangJiyoung/ImgGeneration/main/John_T.png",
+            profile: "A 15-16 years old high school teenager boy, slimmer jawline, slightly taller and mature stature, styled messy brown hair, brown eyes, faint freckles."
+        },
+        "John_G": {
+            url: "https://raw.githubusercontent.com/JangJiyoung/ImgGeneration/main/John_G.png",
+            profile: "A 27-28 years old young adult man, clean-shaven sharp jawline, mature and well-groomed brown hair, deep brown eyes, sophisticated modern adult look."
+        },
+        "Mary_E": {
+            url: "https://raw.githubusercontent.com/JangJiyoung/ImgGeneration/main/Mary_E.png",
+            profile: "A 11-12 years old elementary school girl, long curly brown hair tied back, warm brown eyes, cute freckles across the nose, sweet smiling look."
+        },
+        "Mary_T": {
+            url: "https://raw.githubusercontent.com/JangJiyoung/ImgGeneration/main/Mary_T.png",
+            profile: "A 15-16 years old high school teenager girl, slender face, beautifully balanced realistic body proportion, long wavy brown hair tied in a high ponytail, brown eyes, freckles."
+        },
+        "Mary_G": {
+            url: "https://raw.githubusercontent.com/JangJiyoung/ImgGeneration/main/Mary_G.png",
+            profile: "A 27-28 years old young adult woman, mature and elegant facial features, highly balanced and realistic feminine body proportion, stylishly groomed long wavy brown hair, expressive brown eyes."
+        }
+    };
+
     function translateKoreanToEnglish(text) {
         if (!text.trim()) return "Matching the mood and context of the dialogue naturally.";
         
@@ -205,22 +273,20 @@
         const dict = {
             "수학 교실": "a math classroom",
             "교실": "a classroom",
-            "방": "John's bedroom",
+            "방": "the bedroom",
             "책상": "the desk",
             "침대": "the bed",
             "자명종 시계": "the alarm clock",
             "잠옷 차림": "wearing pajamas",
             "당황해 하는": "panicking and holding his head",
+            "말풍선 제거": "speech bubbles removed",
+            "말풍선 빼줘": "speech bubbles excluded",
             "말풍선": "speech bubbles",
+            "글자 제거": "text removed",
+            "글자": "text",
             "제거": "removed",
             "제외": "excluded",
-            "천정": "ceiling",
-            "남학생": "Jun (the boy)",
-            "여학생": "Mary (the girl)",
-            "병원": "clinic",
-            "의사": "doctor",
-            "진찰": "examination",
-            "구강 검사": "throat examination"
+            "천정": "ceiling"
         };
 
         for (let key in dict) {
@@ -235,27 +301,50 @@
         const bgKo = document.getElementById('bgInput').value.trim();
         const lightRef = document.getElementById('lightRefInput').value.trim();
 
-        if (!dialogue && !bgKo) {
-            alert('다이알로그나 배경 설명을 입력해 주세요!');
+        if (!dialogue) {
+            alert('영문 다이알로그를 입력해 주세요!');
             return;
         }
 
         const bgEn = translateKoreanToEnglish(bgKo);
+        const selectedChips = document.querySelectorAll('.char-chip.selected');
+        let visualReferenceLines = [];
+        let profileLines = [];
 
-        // =====================================================
-        // [STAGE 1] 라이트 모드 프롬프트
-        // =====================================================
-        const lightPrompt = `[CRITICAL SYSTEM DIRECTION: DO NOT reply with text descriptions or link URLs. Skip introduction. IMMEDIATELY call your internal image generation tool to render the artwork now.]
+        selectedChips.forEach(chip => {
+            const charKey = chip.getAttribute('data-char');
+            const charData = characterDatabase[charKey];
+            if (charData) {
+                visualReferenceLines.push(`- Analyze and perfectly replicate the face, facial features, hair style, and overall character proportions from this direct image URL: [ ${charData.url} ]`);
+                profileLines.push(`- ${charData.profile}`);
+            }
+        });
 
-Generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio. 
+        const referenceSection = visualReferenceLines.length > 0 
+            ? visualReferenceLines.join('\n') 
+            : '- Maintain a consistent modern webtoon illustration art style.';
+            
+        const profileSection = profileLines.length > 0 
+            ? profileLines.join('\n') 
+            : '- Keep character appearance natural according to the context.';
 
-[Character & Style Consistency]
-- Refer to the style, character design, and line work of the existing images: "bg_MathMagic_EL.jpg" and "bg_MathMagic_ED.jpg".
-- The main character is Jun (modeled as John here): Messy brown hair, brown eyes, freckles.
-- Maintain the same modern Webtoon/Anime illustration art style, character proportions, and facial features.
+        // [STAGE 1] 라이트 모드 (명령어 강화)
+        const lightPrompt = `[CRITICAL SYSTEM DIRECTION: IMMEDIATELY call your internal image generation tool to render the artwork now. DO NOT reply with text descriptions.]
+
+Please generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio.
+
+[Visual Reference & Character Consistency - CRITICAL]
+${referenceSection}
+- Maintain the identical modern Anime/Webtoon illustration style, line work, and coloring method from the reference URL(s).
+${profileSection}
+
+[Anonymity & Text Exclusion - CRITICAL]
+- DO NOT add any name tags, labels, or names onto the image or pointing at characters. 
+- DO NOT include any speech bubbles, callouts, dialogue text, or alphabet letters inside the illustration. 
+- The image must remain entirely clean, pure artwork-only without any UI elements.
 
 [Dialogue & Situation]
-- Dialogue: 
+- Dialogue (Use ONLY for context): 
 ${dialogue}
 
 - Detailed Scene Setup & Modifications: 
@@ -266,34 +355,36 @@ ${bgEn}
 - Soft beige, cream, and warm tones for the overall color palette.
 - Do NOT split the screen. Generate exactly ONE clean 1:1 square image.
 
-[FINAL COMMAND: Trigger the image generation tool immediately. Do not write text before the tool execution.]`;
+[FINAL COMMAND: Trigger the image generation tool immediately.]`;
 
-        // =====================================================
-        // [STAGE 2] 다크 모드 프롬프트 (특정 장소 제약 제거 및 상속 강화)
-        // =====================================================
-        const finalLightStateDescription = lightRef ? 
-            `Based on the FINALLY ESTABLISHED [LIGHT MODE] image which is described as: "${lightRef}"` : 
-            `Based on the FINALLY ESTABLISHED [LIGHT MODE] image that you just generated in this session`;
+        // [STAGE 2] 다크 모드 (직전 턴 강제 상속)
+        let imageInheritanceText = '- Refer to the EXACT [LIGHT MODE] image that you successfully generated in the VERY LAST turn.';
+        if (lightRef) {
+            imageInheritanceText = `- Refer to the specific [LIGHT MODE] image file named "${lightRef}" verbatim.`;
+        }
 
-        const darkPrompt = `[CRITICAL SYSTEM DIRECTION: DO NOT reply with text descriptions or link URLs. Skip introduction. IMMEDIATELY call your internal image generation tool to render the artwork now.]
+        const darkPrompt = `[CRITICAL SYSTEM DIRECTION: IMMEDIATELY call your internal image generation tool to render the artwork now. DO NOT reply with text descriptions.]
 
-${finalLightStateDescription}. Now, convert the EXACT SAME SCENE into [DARK MODE] as ONE single 1:1 square illustration.
+Based on the FINALLY ESTABLISHED [LIGHT MODE] image. Now, convert that EXACT SAME SCENE into [DARK MODE] as ONE single 1:1 square illustration.
 
-[Strict Consistency Requirements - CRITICAL]
-- ABSOLUTELY EVERYTHING from that final light mode image must be preserved EXACTLY THE SAME.
-- This includes: the characters' exact poses, facial expressions, the exact placement of ALL objects, the furniture, and the overall room layout.
-- Retain all the specific modifications made in that final light mode version.
-- Do NOT change the composition, camera angle, or character appearances. Simply shift the environment from day to night/dark lighting without altering any object locations or details.
+[Strict Consistency from the Target Image - CRITICAL]
+${imageInheritanceText}
+- FREEZE THE COMPOSITION: Keep absolutely everything EXACTLY THE SAME as the referenced light mode image.
+- The characters' exact poses, facial expressions, the placement of ALL objects (desks, food, clocks, etc.), and the overall layout MUST NOT CHANGE.
+- Retain all the modifications made in that final light mode version.
+- Do NOT change the camera angle or character appearances. Simply shift the environment from day to night.
+
+[Anonymity & Text Exclusion - CRITICAL]
+- ABSOLUTELY NO text, letters, character names, labels, speech bubbles, or captions. Maintain a completely clean illustration without any textual elements.
 
 [Image Specifications: Dark Mode]
-- Dimmed, cool, and nocturnal/dark atmosphere.
+- Dimmed, cool, and nocturnal atmosphere.
 - Change the overall color palette to dark teal, cyan, and deep blue-green tones.
-- Replace the warm daytime light with a cool neon/artificial overhead light glow or moonlight.
+- Replace the warm daytime light with a cool neon/artificial overhead light glow from the ceiling.
 - Do NOT split the screen or show side-by-side comparison. Generate exactly ONE clean 1:1 dark mode image.
 
-[FINAL COMMAND: Trigger the image generation tool immediately. Do not write text before the tool execution.]`;
+[FINAL COMMAND: Trigger the image generation tool immediately.]`;
 
-        // 결과 삽입 및 화면 표시
         document.getElementById('lightOutput').value = lightPrompt;
         document.getElementById('darkOutput').value = darkPrompt;
         document.getElementById('outputSection').style.display = 'block';
