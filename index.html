@@ -297,39 +297,62 @@
     }
 
     function generateSplitPrompts() {
-        const dialogue = document.getElementById('dialogueInput').value.trim();
-        const bgKo = document.getElementById('bgInput').value.trim();
-        const lightRef = document.getElementById('lightRefInput').value.trim();
+    const dialogue = document.getElementById('dialogueInput').value.trim();
+    const bgKo = document.getElementById('bgInput').value.trim();
+    const lightRef = document.getElementById('lightRefInput').value.trim();
 
-        if (!dialogue) {
-            alert('영문 다이알로그를 입력해 주세요!');
-            return;
+    if (!dialogue) {
+        alert('영문 다이알로그를 입력해 주세요!');
+        return;
+    }
+
+    const bgEn = translateKoreanToEnglish(bgKo);
+    const selectedChips = document.querySelectorAll('.char-chip.selected');
+    let visualReferenceLines = [];
+    let profileLines = [];
+    
+    // 연령대 체크를 위한 변수
+    let isElementary = false;
+    let isTeenager = false;
+
+    selectedChips.forEach(chip => {
+        const charKey = chip.getAttribute('data-char');
+        if (charKey.endsWith('_E')) isElementary = true;
+        if (charKey.endsWith('_T')) isTeenager = true;
+
+        const charData = characterDatabase[charKey];
+        if (charData) {
+            visualReferenceLines.push(`- Analyze and perfectly replicate the face, facial features, hair style, and overall character proportions from this direct image URL: [ ${charData.url} ]`);
+            profileLines.push(`- ${charData.profile}`);
         }
+    });
 
-        const bgEn = translateKoreanToEnglish(bgKo);
-        const selectedChips = document.querySelectorAll('.char-chip.selected');
-        let visualReferenceLines = [];
-        let profileLines = [];
+    // [추가] 연령대 및 소품 복잡도 통제 로직
+    let deskControlPrompt = "";
+    if (isElementary) {
+        deskControlPrompt = `
+[Desk Environment Control - Age 11-12 Elementary School Level]
+- Keep the desk very clean and minimal. Remove excessive props or clutter to avoid a messy look.
+- Place only a simple open notebook, a few colored pencils, and an eraser.
+- STRICTLY PROHIBITED: No complex chemical formulas, high-level molecular structures, advanced technical blueprints, or text. If there are sketches on the note, they must be simple, cute, child-like drawings (e.g., a simple cartoon volcano sketch).`;
+    } else if (isTeenager) {
+        deskControlPrompt = `
+[Desk Environment Control - Age 15-16 High School Level]
+- Keep the desk neatly organized without chaotic clutter.
+- Place basic student school supplies (a simple textbook, a neat notebook, and pens).
+- No overly professional, college-level research papers, dense data graphs, or advanced university-level equations. Keep the textbook illustrations clean and standard.`;
+    } else {
+        // 성인용 혹은 기본 설정
+        deskControlPrompt = `
+[Desk Environment Control - General]
+- Keep the composition neat and balanced. Avoid messy clutter on the desk.`;
+    }
 
-        selectedChips.forEach(chip => {
-            const charKey = chip.getAttribute('data-char');
-            const charData = characterDatabase[charKey];
-            if (charData) {
-                visualReferenceLines.push(`- Analyze and perfectly replicate the face, facial features, hair style, and overall character proportions from this direct image URL: [ ${charData.url} ]`);
-                profileLines.push(`- ${charData.profile}`);
-            }
-        });
+    const referenceSection = visualReferenceLines.length > 0 ? visualReferenceLines.join('\n') : '- Maintain a consistent modern webtoon illustration art style.';
+    const profileSection = profileLines.length > 0 ? profileLines.join('\n') : '- Keep character appearance natural according to the context.';
 
-        const referenceSection = visualReferenceLines.length > 0 
-            ? visualReferenceLines.join('\n') 
-            : '- Maintain a consistent modern webtoon illustration art style.';
-            
-        const profileSection = profileLines.length > 0 
-            ? profileLines.join('\n') 
-            : '- Keep character appearance natural according to the context.';
-
-        // [STAGE 1] 라이트 모드 (명령어 강화)
-        const lightPrompt = `[CRITICAL SYSTEM DIRECTION: IMMEDIATELY call your internal image generation tool to render the artwork now. DO NOT reply with text descriptions.]
+    // [STAGE 1] 라이트 모드 (deskControlPrompt 분문 삽입)
+    const lightPrompt = `[CRITICAL SYSTEM DIRECTION: IMMEDIATELY call your internal image generation tool to render the artwork now. DO NOT reply with text descriptions.]
 
 Please generate ONE single illustration for [LIGHT MODE] with a strict 1:1 square aspect ratio.
 
@@ -349,6 +372,7 @@ ${dialogue}
 
 - Detailed Scene Setup & Modifications: 
 ${bgEn}
+${deskControlPrompt}  <!-- 생성된 연령별 소품 통제 프롬프트가 여기에 삽입됩니다 -->
 
 [Image Specifications: Light Mode]
 - Bright, warm, and natural morning/daytime room lighting.
